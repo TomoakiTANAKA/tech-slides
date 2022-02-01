@@ -87,10 +87,9 @@ img[alt~="center"] {
 # 目次
 
 1. ユニットテストとは？
-2. テストコードの事例紹介
-3. いつユニットテストをするのか？
-4. どこまでテストコードを書くのか？
-5. 田中とテストの歴史
+2. いつ / どれだけユニットテストを作成し実行するか？
+3. 事例紹介
+4. 田中とテストの歴史
 6. まとめ
 
 ※ 組織の意見でなく、個人の意見です
@@ -149,16 +148,15 @@ img[alt~="center"] {
 
 ---
 
-## いつ
+## いつ、どうやって
 - プルリクエスト作成時？リリース時？
+- 手動？自動？
 
 ## どこまで
 - カバレッジは？C0、C1?
 - 全メソッド？一部のメソッド？
 - ロジックのみ？UI部分も？
 
-## どうやって
-- 手動？自動？
 
 ---
 
@@ -176,6 +174,83 @@ img[alt~="center"] {
 ## どこまで
 - カバレッジは気にしない。後述する複雑系のみ対応
 - 基本ロジックのみでUIテストはしない
+- コード解析やリファクタリング目的で作成することも
+
+---
+
+# いつ、どうやって、どこまで、に関する事例紹介
+
+---
+
+# 事例紹介
+
+---
+
+# 事例紹介（いつ、どうやって）
+## 手動実行に関して
+- ローカル環境を用意し「コマンド実行」できるようにしておく
+- テストの実行方法を記載しておく（README、テストコード）
+- テスト忘れが発生しないようチェックリスト（PULL_REQUEST_TEMPLATE.mdを利用）
+
+## 自動実行に関して
+- 簡易導入としてgit hooksを利用。push時にテスト
+- 最近はGithub Actionsがメイン。無料枠が強力。
+  - iOSアプリのビルドやストアへのアップロードにも利用している（余談）
+
+---
+
+例）手順を記載しておく
+
+```ruby
+# ↓↓↓ テストの実行方法を記述しておく
+# run test command
+# docker compose exec rails bin/rspec spec/models/user_spec.rb
+
+require 'rails_helper'
+
+RSpec.describe User, type: :model do
+  # ...ユニットテストの中身...
+end
+```
+
+---
+
+例）Github Actions
+
+```yaml
+name: dart-analyzer
+
+on:
+  # masterやfeatureブランチにpushした時
+  push:
+    branches: [ 'master', 'feature/*' ]
+    paths: ['**.dart', 'pubspec.*', 'analysis_options.yaml', '.github/workflows/dart-analyzer.yaml']
+
+jobs:
+  # テストジョブを走らせる（コード解析もセット）
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v2
+    - uses: subosito/flutter-action@v1
+      with:
+        flutter-version: 2.2.0
+        channel: 'stable'
+    - name: run-analyze
+      run: |
+        flutter pub get
+        flutter test
+        flutter analyze --fatal-warnings --no-fatal-infos
+```
+
+---
+
+# 事例紹介（どこまで）
+## 
+- カバレッジは気にしない。後述する複雑系のみ対応
+- 基本ロジックのみでUIテストはしない
+- コード解析やリファクタリング目的で作成することも
 
 ---
 
