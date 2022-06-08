@@ -337,193 +337,21 @@ if ($request_uri ~* "(sitemap.xml") {
 
 ---
 
+基本的に、assetファイル（画像やcss等）をファイルサーバーに配置し、CDN登録するだけ
+とはいえ、トラブルも…
 
----
+- 例）画像ファイル更新したのに、更新されない
+- 原因
+  - S3のファイルは変更されているが、CDNのキャッシュが残るため
+- 対策
+  - フィンガープリントを使ってデプロイのたびにファイル名を書き換える
+  - CDNのキャッシュを削除する
 
-# まとめ
-
-
-```ruby
-    it 'youtube動画へのリンク形式が不正なときに無効な状態であること' do
-
-      # 入力の定義
-      invalid_urls = %w[https://cojicaji.jp
-                        https://youtube.com
-                        https://www.youtube.com/@hoge
-                        https://www.youtube.com/user/こじかじ
-                        https://www.youtube.com/channer/こじかじ]
-
-      # すべての入力に対して処理を行う
-      invalid_urls.each do |invalid_url|
-        user_with_sns.youtube = invalid_url
-        user_with_sns.valid?
-
-        # 入力と出力の組み合わせを検証
-        expect(user_with_sns.errors[:youtube]).to include('リンクの形式が誤っています')
-      end
-    end
+フィンガープリントの例
 ```
-
-
----
-
-# いつ / どれだけユニットテストを作成し実行するか？
-
----
-
-## いつ、どうやって
-- プルリクエスト作成時？リリース時？
-- 手動？自動？
-
-## どこまで
-- カバレッジは？C0、C1?
-- 全メソッド？一部のメソッド？
-- ロジックのみ？UI部分も？
-
-
----
-
-# ユニットテストする、しない
-# シンプルな問だが考慮する変数は多い
-
----
-
-# スピーカの意見
-
-## いつ、どうやって
-- プルリクエスト作成時にテストを用意しておき実行（手動）
-- mainブランチへのマージ時にも実行（自動）
-
-## どこまで
-- カバレッジは気にしない。後述する複雑系のみ対応
-- 基本ロジックのみでUIテストはしない
-- コード解析やリファクタリング目的で作成することも
-
----
-
-# いつ、どうやって、どこまで、に関する事例紹介
-
----
-
-# 事例紹介
-
----
-
-# 事例紹介（いつ、どうやって）
-## 手動実行に関して
-- ローカル環境を用意し「コマンド実行」できるようにしておく
-- テストの実行方法を記載しておく（README、テストコード）
-- テスト忘れが発生しないようチェックリスト（PULL_REQUEST_TEMPLATE.mdを利用）
-
-## 自動実行に関して
-- 簡易導入としてgit hooksを利用。push時にテスト
-- 最近はGithub Actionsがメイン。無料枠が強力。
-  - iOSアプリのビルドやストアへのアップロードにも利用している（余談）
-
----
-
-例）手順を記載しておく
-
-```ruby
-# ↓↓↓ テストの実行方法を記述しておく
-# run test command
-# docker compose exec rails bin/rspec spec/models/user_spec.rb
-
-require 'rails_helper'
-
-RSpec.describe User, type: :model do
-  # ...ユニットテストの中身...
-end
-```
-
----
-
-例）Github Actions
-
-```yaml
-name: dart-analyzer
-
-on:
-  # masterやfeatureブランチにpushした時
-  push:
-    branches: [ 'master', 'feature/*' ]
-    paths: ['**.dart', 'pubspec.*', 'analysis_options.yaml', '.github/workflows/dart-analyzer.yaml']
-
-jobs:
-  # テストジョブを走らせる（コード解析もセット）
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-    - uses: actions/checkout@v2
-    - uses: subosito/flutter-action@v1
-      with:
-        flutter-version: 2.2.0
-        channel: 'stable'
-    - name: run-analyze
-      run: |
-        flutter pub get
-        flutter test
-        flutter analyze --fatal-warnings --no-fatal-infos
-```
-
----
-
-# 事例紹介（どこまで）
-## カバレッジ100%目標にしない
-- 計算が直感的でない（例：日付処理）や、入力パターンが多く手動でのテストがめんどくさいものを優先的に行う
-- 品質が担保できれば良いので、ほぼ自明なものをわざわざテストしない
-
-## ロジックに集中
-- ロジックのテストに集中しUIのユニットテストはしない<br>（UIは見たほうが早いことも多く、テスト作成や維持するコストが重いので）
-- ロジックに集中できるように、レイヤードアーキテクチャを意識。できる限りプレーンな言語だけでロジックを記載
-
----
-
-例）日付計算（パターンは多岐に渡り、エッジケースも複雑なのでテスト化する）
-
-```dart
-// ロジック
-int numberOfDayOfTheWeekInMonth() {
-  // ある日付が7の周期で何回目の登場かをを計算
-  final nth =  ((_value.day - 1) / 7).floor() + 1;
-  return nth;
-}
-```
-```dart
-// test
-void main() {
-  group('ある月における何回目の曜日か', () {
-      test('テストデータが第1水曜日であること', () {
-        final result = calendarDate.numberOfDayOfTheWeekInMonth();
-        expect(result, 1);
-        expect(calendarDate.dayOfWeek, DayOfWeek.Wednesday);
-      });
-}
-```
-
----
-
-例）アプリのレビュー発火ロジック（起動100回を実施するのはめんどくさい。起動回数さえ正しければ〜という考えでロジックをテスト）
-
-```dart
-class ReviewLogic {
-  bool shoudFired() {
-    // 直接データを引っ張ってくると結合度が高くテストしにく
-    final getLaunchTime = getgetLaunchTimeFromDataBase();
-    return if getLaunchTime >= 100;
-  }
-}
+app.css
 ↓↓↓
-↓↓↓
-class ReviewLogic {
-  // リポジトリなどレイヤーをかませるとテストしやすい
-  final _repository = UserPropertyRepository();
-  bool shoudFired() {
-    final getLaunchTime = _repository.getgetLaunchTime();
-    return if getLaunchTime >= 100;
-  }
-}
+app-98f2b4256f620be0496ff18f157f863a.css
 ```
 
 ---
@@ -532,43 +360,28 @@ class ReviewLogic {
 
 ---
 
-# まとめ①（ユニットテストの考え方）
-- 目的（品質担保）のするために、費用対効果の高い方法を取れば良い
-  - 複雑な処理のエッジケースの確認
-  - テスト自体がドキュメントになるので開発が持続するなら書く
-  - など
+# まとめの前に
+
+Q. 
+  - そもそもGET中心でいいなら、HTMLファイルごとCDN配信すればよいのでは？
+A. 
+  - まさしくそのとおり
+  - 最近のミニサイトであれば、ローカルでHTMLを作成して、s3にアップロード => CDN配信の形もおすすめです
+  
 
 ---
 
-# まとめ②（ユニットテストする / しない）
+# まとめ
 
-## する
-- 入出力の組み合わせが多い場合
-- コード解析やリファクタリングするときの前準備
-
-## しない
-- 目視で十分な部分なところ
-- 入力に対する出力がシンプルな場合（例：ユーザー名に「さん」をつける、だけ）
-- 行数が大きいメソッド（テストの前に、メソッドを分解）
+- Webメディアの特徴を説明しました
+  - GET中心の世界
+- Webメディアにおけるアクセスのさばき方を説明しました
+  - 基本はファイルキャッシュ
+- ファイルキャッシュやCDNの具体的な運用について説明しました  
 
 ---
 
 # ご清聴ありがとうございました
-
----
-
-# 付録
-
----
-
-# 参考文献
-- 影響を受けたり、役に立ったと思う書籍や資格
-  - [テスト駆動開発](https://www.amazon.co.jp/dp/B077D2L69C)
-    - ご存知t_wadaさんの翻訳本（KnetBeckの書籍としてもかなり有名）
-  - [RSpecによるRailsテスト入門](https://leanpub.com/everydayrailsrspec-jp)
-  - [JSTQB（ソフトウェアテストの資格）](http://jstqb.jp/)
-    - ソフトウェア開発していればおおよそ経験する内容を網羅的にまとめている
-    - 1〜3年目くらいにスキルの定着具合や抜け漏れないか確認する意味で
 
 ---
 
