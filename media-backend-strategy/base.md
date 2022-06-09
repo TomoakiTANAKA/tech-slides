@@ -1,5 +1,5 @@
 ---
-marp: false
+marp: true
 theme: default
 header: "**勉強会資料** __数千万PVをさばくためのインフラ構成について__"
 footer: "by [TomoakiTANAKA](tanaka1987＠gmail.com)"
@@ -58,17 +58,18 @@ img[alt~="center"] {
 
 ---
 
-# 株式会社DanRan（だんらん）
+# 株式会社DanRan
 
 ![bg right](./assets/images/company/akamaru.png)
 
-- エバーセンスとポプラ社のJVとして、2022年4月にできたばかりの会社
-- 児童向けの知育アプリの開発等を行っています
+- エバーセンスとポプラ社のJV
+- 2022年4月設立
+- 主に、児童向けの知育アプリの開発等を行う
 
 ## Products
 
 - タッチであそぼ！あかまるどれかな？
-- iOS / Android 版があるので小さなお子様やお孫さんがいらっしゃる方は是非
+- iOS / Android 版があるので是非
 
 
 ---
@@ -77,7 +78,7 @@ img[alt~="center"] {
 
 - Q1. PVってなんのことでしょうか？（なんの略でしょうか）
 - Q2. Webメディアってなんでしょうか？
-- Q3. 月間PV 4,500万（@todo: 今いくつだ？）ってすごいのでしょうか？
+- Q3. 月間PV 4,500万ってすごいのでしょうか？
 
 是非スレッドに回答をお願いします
 
@@ -87,12 +88,17 @@ img[alt~="center"] {
 
 ---
 
-# アイスブレイク
+# アイスブレイク（回答）
 
 - A1. PVはPageView（ページビュー）の略で、Webページの閲覧回数のこと
 - A2. www（WorldWideWeb）上で、記事をまとめた読めるWebサイト（Webサービス）のこと
   - 例）Qiita, zenn, マイナビニュース, ロケットニュース24
-- A3. 月間PV 4,500万（@todo: 今いくつだ？）ってすごいのでしょうか？
+
+---
+
+# アイスブレイク（回答）
+
+- A3. 月間PV 4,500万ってすごいのでしょうか？
   - 月間平均で 1,000pv/分 なので、結構すごいと思います
   - GoogleAnalyticsのリアルタイムユーザー 3,000人 くらいです（でした）
   - もちろん上を見たらきりがないですが…
@@ -135,7 +141,8 @@ img[alt~="center"] {
 ## この話を聞いて得られそうなこと
 
 - Webサービスの運用を見据えたインフラ構成やテクニックの理解
-- テレビCMやインフルエンサーバズによる急なアクセス増加に対する心の安寧（個人差あり）
+- テレビCMやインフルエンサーバズによる急なアクセス増加に対する心の安寧<br />
+（個人差あり）
 
 
 ---
@@ -172,7 +179,7 @@ img[alt~="center"] {
 
 # Webメディアの特徴（もう少し技術的に）
 
-![](./assets/images/infra/default_1.png)
+![height:200](./assets/images/infra/default_1.png)
 
 ※ サーバーサイドレンダリングを前提にしています
 
@@ -185,7 +192,7 @@ img[alt~="center"] {
 
 ---
 
-![](./assets/images/infra/speed.png)
+![height:480](./assets/images/infra/speed.png)
 
 出典
 - [プログラマが知っておくべき、メモリ/ディスク/ネットワークの速度まとめ](https://qiita.com/awakia/items/c8ada6c8101efe2de561)
@@ -255,7 +262,7 @@ img[alt~="center"] {
 
 # Webメディアによるキャッシュ戦略
 
- - クエリなしのURLに対するHTMLファイル 
+- クエリなしのURLに対するHTMLファイル 
   - => WebサーバーでHTMLファイルを事前作成（ファイルキャッシュ）
 - CSSやJavaScriptなど、共通でアクセスするファイル
   - => CDNで高速アクセスできるようにしておく（S3 + CloudFront）
